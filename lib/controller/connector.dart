@@ -83,7 +83,7 @@ class Connector {
     return printCommand;
   }
 
-  Future<void> runPrintJob(String json, Function action) async {
+  Future<void> runPrintJob(String json, Function(PrintResponse) action) async {
     try {
       var res = _jsonToPrintCommand(json);
       var printerAlias = _getPrinterAlias(res);

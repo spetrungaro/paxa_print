@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 class PrinterTile extends StatelessWidget {
   final Map value;
-  const PrinterTile(this.value, {super.key});
+  final dynamic onDelete;
+  final String id;
+  const PrinterTile(this.value, this.id, this.onDelete, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +31,11 @@ class PrinterTile extends StatelessWidget {
       ),
       leading: Icon(
           value['driver'] == 'ReceiptDirectJet' ? Icons.print : Icons.cast),
-      trailing: const Icon(
-        Icons.radio_button_checked,
-        color: Colors.green,
+      trailing: IconButton(
+        icon: const Icon(Icons.delete),
+        onPressed: () {
+          onDelete(id);
+        },
       ),
       onTap: () {},
     );

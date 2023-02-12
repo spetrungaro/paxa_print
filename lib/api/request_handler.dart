@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:paxa_print/utils/uuid_assignment.dart';
 
 import '../controller/connector.dart';
 import '../models/print_response.dart';
@@ -33,6 +35,23 @@ class RequestHandler extends ChangeNotifier {
     onPrintMessage = (_) {};
     onServerError = () {};
     onServerStatusChanged = (_) {};
+  }
+
+  Future<void> discover() async {
+    var server = Hive.box('config').get('SERVIDOR');
+    var printers = Hive.box('printers').keys;
+    if (server == null) {
+      var newServer = {
+        'uuid': UuidAssignment.v4(),
+        'puerto': port,
+        'ip_privada': ip,
+        'discover_url': 'https://www.paxapos.com/discover.json',
+      };
+      await Hive.box('config').put('SERVIDOR', newServer);
+    } else {
+      print(server);
+    }
+    // throw Exception;
   }
 
   Future<void> startServer() async {

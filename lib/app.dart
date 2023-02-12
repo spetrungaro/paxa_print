@@ -54,8 +54,9 @@ class _AppState extends State<App> {
         title: Text('IP: $ip'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           if (!_running) {
+            await handler.discover();
             handler.startServer();
             ScaffoldMessenger.of(context).showSnackBar(
               notificationSnackBar('Servidor iniciado'),

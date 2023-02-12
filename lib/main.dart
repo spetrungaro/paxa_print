@@ -18,6 +18,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 
 void main() async {
+  await Hive.initFlutter();
+  await Hive.openBox('printers');
+  await Hive.openBox('config');
+  runApp(RestartWidget(
+    child: MaterialApp(
+      theme: ThemeData(
+        colorSchemeSeed: const Color.fromARGB(248, 9, 28, 201),
+      ),
+      debugShowCheckedModeBanner: false,
+      title: 'Fiscalberry - Paxapos',
+      home: const App(),
+    ),
+  ));
+  print('App launched');
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     const config = FlutterBackgroundAndroidConfig(
         notificationTitle: 'Fiscalberry Background',
@@ -40,19 +54,6 @@ void main() async {
     print('No need for permissions');
     print(defaultTargetPlatform.name);
   }
-  await Hive.initFlutter();
-  await Hive.openBox('printers');
-  runApp(RestartWidget(
-    child: MaterialApp(
-      theme: ThemeData(
-        colorSchemeSeed: const Color.fromARGB(248, 9, 28, 201),
-      ),
-      debugShowCheckedModeBanner: false,
-      title: 'Fiscalberry - Paxapos',
-      home: const App(),
-    ),
-  ));
-  print('App launched');
 }
 
 class RestartWidget extends StatefulWidget {

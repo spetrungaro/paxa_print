@@ -1,12 +1,14 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 
 import '../controller/connector.dart';
 import '../models/print_response.dart';
-// import 'server_errors.dart';
 
-class RequestHandler {
+class RequestHandler extends ChangeNotifier {
   late HttpServer _server;
 
   late String ip;
@@ -18,9 +20,11 @@ class RequestHandler {
 
   final Connector _connector = Connector();
   final List<WebSocket> _sockets = [];
-  final List<String> _clients = [];
 
   bool get running => _running;
+
+  final List<Map<String, String>> _devicesList = [];
+  List<Map<String, String>> get devicesList => _devicesList;
 
   RequestHandler() {
     ip = 'localhost';
@@ -48,24 +52,41 @@ class RequestHandler {
   Future<void> handleSocketConnection(HttpRequest request) async {
     if (request.uri.path == '/ws') {
       var socket = await WebSocketTransformer.upgrade(request);
-      var clientAddress =
+      // Device Info
+      var clientIp =
           request.connectionInfo?.remoteAddress.address ?? 'desconocido';
       var clientPort = request.connectionInfo?.remotePort ?? 'desconocido';
-      var clientInfo = '$clientAddress:$clientPort';
-      _sockets.add(socket);
-      _clients.add(clientInfo);
+      var clientAddress = '$clientIp:$clientPort';
 
-      print('Client: $clientInfo');
-      print(_clients);
+      String deviceType;
+      var isMobile = request.headers['user-agent']?.first.contains('Mobile');
+      if (isMobile == null) {
+        deviceType = 'unknown';
+      } else if (isMobile == true) {
+        deviceType = 'mobile';
+      } else {
+        deviceType = 'desktop';
+      }
+      var clientInfo = {'address': clientAddress, 'type': deviceType};
+      addClient(clientInfo, socket);
+      print(_devicesList);
+      // Device Info
 
       handleSocketMessages(socket, clientInfo);
+    } else if ((request.uri.path == '/api')) {
+      print('Api alcanzada');
+      var body = await utf8.decodeStream(request);
+      _connector.runPrintJob(body, onPrintMessage);
+
+      request.response.write('{"data":"datum}');
+      request.response.close();
     } else {
-      request.response.statusCode = HttpStatus.forbidden;
+      request.response.statusCode = HttpStatus.notFound;
       request.response.close();
     }
   }
 
-  void handleSocketMessages(WebSocket socket, String clientInfo) {
+  void handleSocketMessages(WebSocket socket, Map<String, String> clientInfo) {
     socket.listen(
       (message) {
         _connector.runPrintJob(message, onPrintMessage);
@@ -82,10 +103,18 @@ class RequestHandler {
     onServerError();
   }
 
-  void removeClient(String clientInfo, WebSocket socket) {
-    print('Client $clientInfo disconnected');
+  void removeClient(Map<String, String> clientInfo, WebSocket socket) {
+    _devicesList.remove(clientInfo);
     _sockets.remove(socket);
-    _clients.remove(clientInfo);
+
+    notifyListeners();
+  }
+
+  void addClient(Map<String, String> clientInfo, WebSocket socket) {
+    _devicesList.add(clientInfo);
+    _sockets.add(socket);
+
+    notifyListeners();
   }
 
   void closeAllConnections() {

@@ -12,10 +12,10 @@ class PrintResponseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       key: Key(printResponse.id),
-      elevation: 4,
+      elevation: 0,
       borderOnForeground: true,
       color: Colors.grey.shade300,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       child: Column(
         children: printResponse.printResult == PrintResult.success
             ? <Widget>[

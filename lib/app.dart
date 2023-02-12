@@ -1,9 +1,11 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'api/request_handler.dart';
-import 'components/info_dialog.dart';
+import 'components/menu_drawer.dart';
+import 'components/notification_snack_bar.dart';
 import 'components/print_response_card.dart';
 import 'models/print_response.dart';
 import 'utils/ip_finder.dart';
@@ -16,27 +18,74 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  final List<PrintResponse> _printResponses = [];
+  final List<PrintResponse> printResponses = [];
+  final List<String> clients = [];
+  final printersBox = Hive.box('printers');
 
   RequestHandler handler = RequestHandler();
 
-  String _ip = 'localhost';
+  String ip = 'localhost';
   int port = 12000;
   bool _running = false;
 
   @override
   void initState() {
+    print('Init');
     getIP().then((value) {
       setState(() {
-        _ip = value;
+        ip = value;
+        handler.ip = value;
+        handler.port = port;
+        handler.onPrintMessage = handlePrintMessage;
+        handler.onServerError = handleServerError;
+        handler.onServerStatusChanged = handleServerStatus;
+        // handler.onClientUpdate = handleClientUpdate;
       });
-      handler.ip = value;
-      handler.port = port;
-      handler.onPrintMessage = handlePrintMessage;
-      handler.onServerError = handleServerError;
-      handler.onServerStatusChanged = handleServerStatus;
     });
     super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('building');
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: false,
+        title: Text('IP: $ip'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (!_running) {
+            handler.startServer();
+            ScaffoldMessenger.of(context).showSnackBar(
+              notificationSnackBar('Servidor iniciado'),
+            );
+          } else {
+            handler.closeServer().then((value) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(notificationSnackBar('Servidor detenido!'));
+            });
+          }
+        },
+        backgroundColor: _running ? Colors.red : Colors.green,
+        child: Icon(_running ? Icons.close_rounded : Icons.play_arrow_rounded,
+            size: 32),
+      ),
+      drawer: MenuDrawer(handler),
+      body: Center(
+        child: ListView(
+          children: <Widget>[
+            ...printResponses.reversed.map((e) => PrintResponseCard(e)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addPrintResult(PrintResponse newResponse) async {
+    setState(() {
+      printResponses.add(newResponse);
+    });
   }
 
   void handleServerStatus(bool status) {
@@ -50,104 +99,11 @@ class _AppState extends State<App> {
   }
 
   void handlePrintMessage(PrintResponse response) {
-    print('Mensaje');
     _addPrintResult(response);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    print('building');
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        title: Text('IP: $_ip'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: !_running ? handler.startServer : handler.closeServer,
-        backgroundColor: _running ? Colors.red : Colors.green,
-        child: Icon(_running ? Icons.close_rounded : Icons.play_arrow_rounded,
-            size: 32),
-      ),
-      drawer: Drawer(
-        elevation: 50,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-              ),
-              child: Column(
-                children: const [
-                  Image(
-                    image: AssetImage('assets/icons/plogo.png'),
-                    height: 80,
-                  ),
-                  Spacer(),
-                  Text(
-                    'Fiscalberry',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.devices),
-              title: const Text('Dispositivos'),
-              subtitle: Text(
-                'Quiénes están conectados',
-                textScaleFactor: .9,
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.text_snippet_outlined),
-              title: const Text('Documentos'),
-              subtitle: Text(
-                'Consulte los últimos comprobantes',
-                textScaleFactor: .9,
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.announcement_rounded),
-              title: const Text('Info'),
-              subtitle: Text(
-                'Acerca de Fiscalberry',
-                textScaleFactor: .9,
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                infoDialog(context);
-              },
-            ),
-            ListTile(
-              subtitle: Text('Configure sus impresoras',
-                  textScaleFactor: .9,
-                  style: TextStyle(color: Colors.grey.shade400)),
-              leading: const Icon(Icons.settings),
-              title: const Text('Configuración'),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-      body: Center(
-        child: ListView(
-          children: <Widget>[
-            ..._printResponses.reversed.map((e) => PrintResponseCard(e))
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _addPrintResult(PrintResponse newResponse) async {
-    setState(() {
-      _printResponses.add(newResponse);
-    });
-  }
+  // void handleClientUpdate() {
+  //   ScaffoldMessenger.of(context)
+  //       .showSnackBar(notificationSnackBar('Nuevo dispositivo conectado!'));
+  // }
 }

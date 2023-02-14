@@ -7,8 +7,8 @@ import '../models/print_response.dart';
 import '../models/printer.dart';
 import '../models/results.dart';
 import 'driver_handler.dart';
-import 'driver_interface.dart';
 import 'escpos/errors.dart';
+import 'interfaces/driver_interface.dart';
 
 class Connector {
   late void Function(PrintTask) onPrintMessage;
@@ -49,8 +49,8 @@ class Connector {
       if (driver == null) {
         printTask.printErrors.add(PrintError.noDriver);
       } else if (printTask.printErrors.isEmpty && printTask.command != null) {
-        printTask.printResult =
-            driver.printCommand(printerMap!, printTask.command!);
+        printTask.printResult = await driver.printCommand(
+            printerMap!, printTask.commandType!, printTask.command!);
       }
     } catch (e) {
       if (e is PrinterConnectionError) {

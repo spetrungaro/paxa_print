@@ -1,10 +1,11 @@
 import '../../models/printer.dart';
 import '../../models/results.dart';
-import '../driver_interface.dart';
+import '../interfaces/driver_interface.dart';
 
 class FiscalberryDriver implements IPrinterDriver {
   @override
-  PrintResult printCommand(Printer printer, Map<String, dynamic> command) {
+  Future<PrintResult> printCommand(
+      Printer printer, String commandType, Map<String, dynamic> command) async {
     return PrintResult.success;
   }
 }

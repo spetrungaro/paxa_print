@@ -60,14 +60,13 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
       body: Form(
           key: _formKey,
           child: Padding(
-            padding:
-                const EdgeInsets.only(top: 0, left: 10, right: 10, bottom: 200),
+            padding: const EdgeInsets.only(top: 0, left: 10, right: 10),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const Padding(
-                  padding: EdgeInsets.only(bottom: 40),
+                  padding: EdgeInsets.only(bottom: 20, top: 20),
                   child: Text(
                     'Ingrese la configuración',
                     style: TextStyle(fontSize: 20),

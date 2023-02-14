@@ -4,6 +4,7 @@ import 'driver/network_printer.dart';
 
 void printTexto(NetworkPrinter printer, Map<String, dynamic>? command) {
   printer.text("text", styles: const PosStyles.defaults());
+  printer.disconnect();
   return;
 }
 

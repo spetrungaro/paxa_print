@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import 'api/request_handler.dart';
 import 'components/menu_drawer.dart';
@@ -19,7 +18,6 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   final List<PrintTask> printTasks = [];
   final List<String> clients = [];
-  final printersBox = Hive.box('printers');
 
   RequestHandler handler = RequestHandler();
   Connector connector = Connector();

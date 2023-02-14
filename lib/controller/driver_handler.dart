@@ -1,6 +1,6 @@
-import 'driver_interface.dart';
 import 'escpos/receipt_direct_jet_driver.dart';
 import 'fiscalberry/fiscalberry_proxy_driver.dart';
+import 'interfaces/driver_interface.dart';
 
 class DriverHandler {
   Map<String, IPrinterDriver> availableDrivers = {

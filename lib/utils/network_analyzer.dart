@@ -79,10 +79,10 @@ class NetworkAnalyzer {
   static Future<NetworkAddress> discoverOnly(
     String ip,
     int port, {
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 2),
   }) async {
     if (port < 1 || port > 65535) {
-      throw 'Incorrect port';
+      return NetworkAddress(ip, false);
     }
     late NetworkAddress printer;
     try {
@@ -91,15 +91,14 @@ class NetworkAnalyzer {
       printer = NetworkAddress(ip, true);
     } catch (e) {
       if (e is! SocketException) {
-        rethrow;
+        return NetworkAddress(ip, false);
       }
-
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
         printer = NetworkAddress(ip, false);
       } else {
         // Error 23,24: Too many open files in system
-        rethrow;
+        printer = NetworkAddress(ip, false);
       }
     }
     return printer;

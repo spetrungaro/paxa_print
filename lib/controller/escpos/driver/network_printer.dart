@@ -69,8 +69,11 @@ class NetworkPrinter {
       }
       if (e.osError?.errorCode == 113) {
         return Future<PosPrintResult>.value(PosPrintResult.noRouteToHost);
+      } else if (e.osError?.errorCode == 1225) {
+        return Future<PosPrintResult>.value(PosPrintResult.connectionRefused);
+      } else {
+        return Future<PosPrintResult>.value(PosPrintResult.notImplemented);
       }
-      return Future<PosPrintResult>.value(PosPrintResult.notImplemented);
     }
   }
 

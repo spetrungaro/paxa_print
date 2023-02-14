@@ -1,12 +1,11 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'api/request_handler.dart';
 import 'components/menu_drawer.dart';
 import 'components/notification_snack_bar.dart';
-import 'components/print_response_card.dart';
+import 'components/print_task_card.dart';
+import 'controller/connector.dart';
 import 'models/print_response.dart';
 import 'utils/ip_finder.dart';
 
@@ -18,11 +17,12 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  final List<PrintResponse> printResponses = [];
+  final List<PrintTask> printTasks = [];
   final List<String> clients = [];
   final printersBox = Hive.box('printers');
 
   RequestHandler handler = RequestHandler();
+  Connector connector = Connector();
 
   String ip = 'localhost';
   int port = 12000;
@@ -30,16 +30,15 @@ class _AppState extends State<App> {
 
   @override
   void initState() {
-    print('Init');
     getIP().then((value) {
       setState(() {
         ip = value;
+        connector.onPrintMessage = handlePrintMessage;
+        handler.connector = connector;
         handler.ip = value;
         handler.port = port;
-        handler.onPrintMessage = handlePrintMessage;
         handler.onServerError = handleServerError;
         handler.onServerStatusChanged = handleServerStatus;
-        // handler.onClientUpdate = handleClientUpdate;
       });
     });
     super.initState();
@@ -47,16 +46,14 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    print('building');
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
         title: Text('IP: $ip'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+        onPressed: () {
           if (!_running) {
-            await handler.discover();
             handler.startServer();
             ScaffoldMessenger.of(context).showSnackBar(
               notificationSnackBar('Servidor iniciado'),
@@ -74,18 +71,23 @@ class _AppState extends State<App> {
       ),
       drawer: MenuDrawer(handler),
       body: Center(
-        child: ListView(
-          children: <Widget>[
-            ...printResponses.reversed.map((e) => PrintResponseCard(e)),
-          ],
-        ),
-      ),
+          child: printTasks.isNotEmpty
+              ? ListView(
+                  children: <Widget>[
+                    ...printTasks.reversed
+                        .map((printTask) => PrintTaskCard(printTask)),
+                  ],
+                )
+              : const Text(
+                  'Aún no hay impresiones',
+                  style: TextStyle(fontWeight: FontWeight.w300, fontSize: 20),
+                )),
     );
   }
 
-  Future<void> _addPrintResult(PrintResponse newResponse) async {
+  Future<void> _addPrintResult(PrintTask newResponse) async {
     setState(() {
-      printResponses.add(newResponse);
+      printTasks.add(newResponse);
     });
   }
 
@@ -99,7 +101,7 @@ class _AppState extends State<App> {
     print('error');
   }
 
-  void handlePrintMessage(PrintResponse response) {
+  void handlePrintMessage(PrintTask response) {
     _addPrintResult(response);
   }
 

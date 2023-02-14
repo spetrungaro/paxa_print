@@ -1,47 +1,66 @@
-import '../models/command.dart';
 import '../models/response_message.dart';
 import '../models/results.dart';
 
-PrintResponseMessage setResponseMessage(
-    PrintResult result, PrintCommand? command) {
-  switch (result) {
-    case PrintResult.success:
-      return PrintResponseMessage(
-          title: 'Se imprimió con éxito',
-          subtitle: 'Si no fue así, revisa el papel');
-    case PrintResult.connectionError:
-      return PrintResponseMessage(
-          title: 'Error de conexión con la impresora',
-          subtitle: 'No se pudo imprimir porque se rechazó la conexión',
-          comments: 'Controlá que la misma esté bien conectada'
-              ' o que la configuracion sea la correcta.');
-    case PrintResult.printerNotExist:
-      return PrintResponseMessage(
-          title: 'Impresora no configurada',
-          subtitle: 'No se encontró ninguna impresora con ese nombre',
-          comments: 'Recorda que el Alias y el Nombre distinguen mayúsculas');
-    case PrintResult.badJsonFormat:
-      return PrintResponseMessage(
-          title: 'Mensaje indescifrable',
-          subtitle:
-              'Se recibió un mensaje de impresión, pero no pudo ser procesado');
-    case PrintResult.badCommand:
-      return PrintResponseMessage(
-          title: 'inválido/a',
-          subtitle: 'Se encontraron errores que no permiten imprimir',
-          comments: 'Puede que en el/la ${command?.friendlyType} falten datos'
-              ' importantes y por eso no se contunuó con la impresión');
-    case PrintResult.noSuchAction:
-      return PrintResponseMessage(
-          title: '${command?.commandType} -> No existe la acción');
-    case PrintResult.printerError:
-      return PrintResponseMessage(title: 'Error impresora');
-    case PrintResult.other:
-      return PrintResponseMessage(title: 'Error desconocido');
-    case PrintResult.noPrinterInJson:
-      return PrintResponseMessage(title: 'No hay impresora en el JSON');
-    case PrintResult.noCommand:
-      return PrintResponseMessage(
-          title: 'No hay comando de impresion en el JSON');
+List<PrintResponseMessage> setResponseMessages(
+    List<PrintError> errors, Map details) {
+  final List<PrintResponseMessage> messages = [];
+  for (PrintError error in errors) {
+    switch (error) {
+      case PrintError.connectionError:
+        messages.add(PrintResponseMessage(
+            title: 'Error de conexión con la impresora',
+            subtitle: 'No se pudo imprimir porque se rechazó la conexión',
+            comments: 'Controlá que la misma esté bien conectada'
+                ' o que la configuracion sea la correcta.'));
+        break;
+      case PrintError.printerNotExist:
+        messages.add(PrintResponseMessage(
+            title: 'Impresora no configurada '
+                '(${details['printer'][0] ?? details['printer'][1]})',
+            subtitle: 'No se encontró ninguna impresora con ese alias/nombre',
+            comments:
+                'Recorda que el Alias y el Nombre distinguen mayúsculas'));
+        break;
+      case PrintError.badJsonFormat:
+        messages.add(PrintResponseMessage(
+            title: 'Mensaje indescifrable',
+            subtitle:
+                'Se recibió un mensaje de impresión, pero no pudo ser procesado'));
+        break;
+      case PrintError.badCommand:
+        messages.add(PrintResponseMessage(
+            title:
+                '${details['command'][1] ?? details['command'][0]} inválido/a',
+            subtitle: 'Se encontraron errores que no permiten imprimir',
+            comments: 'Puede que en el/la '
+                '${details['command'][1] ?? details['command'][0]} falten datos'
+                ' importantes y por eso no se contunuó con la impresión'));
+        break;
+      case PrintError.noSuchAction:
+        messages.add(PrintResponseMessage(
+            title: '${details['command'][1]} -> No existe la acción'));
+        break;
+      case PrintError.printerError:
+        messages.add(PrintResponseMessage(title: 'Error impresora'));
+        break;
+      case PrintError.unhandledError:
+        messages.add(PrintResponseMessage(title: 'Error desconocido'));
+        break;
+      case PrintError.noPrinterInJson:
+        messages
+            .add(PrintResponseMessage(title: 'No hay impresora en el JSON'));
+        break;
+      case PrintError.noCommand:
+        messages.add(PrintResponseMessage(
+            title: 'No hay comando de impresión en el JSON'));
+        break;
+      case PrintError.noDriver:
+        messages.add(PrintResponseMessage(title: 'No hay Driver'));
+        break;
+      case PrintError.didNotPrint:
+        messages.add(PrintResponseMessage(title: 'No imprimió'));
+        break;
+    }
   }
+  return messages;
 }

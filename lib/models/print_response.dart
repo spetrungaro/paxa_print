@@ -1,30 +1,33 @@
 import '../utils/message_setter.dart';
 import '../utils/uuid_assignment.dart';
-import 'command.dart';
 import 'response_message.dart';
 import 'results.dart';
 
-class PrintResponse {
-  PrintCommand? command;
+class PrintTask {
+  Map<String, dynamic>? command;
+  String? commandType;
   String? printerName;
+  String? printerAlias;
   String? rawRequest;
-  PrintResult printResult;
-  late String id;
-  late bool success;
-  late PrintResponseMessage message;
+  PrintResult printResult = PrintResult.withErrors;
+  String id = UuidAssignment.v4();
+  final List<PrintError> printErrors = [];
 
-  PrintResponse(
-      {this.command,
-      this.printerName,
-      required this.printResult,
-      this.rawRequest}) {
-    id = UuidAssignment.v4();
-    success = printResult == PrintResult.success;
-    message = setResponseMessage(printResult, command);
+  String? get friendlyType {
+    if (commandType == null) return null;
+    var replaced = commandType!.replaceFirst('print', '');
+    if (replaced == 'openDrawer') return 'Abrir Cajón';
+    final beforeNonLeadingCapitalLetter = RegExp(r"(?=(?!^)[A-Z])");
+    List<String> splitPascalCase(String input) =>
+        input.split(beforeNonLeadingCapitalLetter);
+    return splitPascalCase(replaced).join(' ');
   }
 
-  @override
-  String toString() {
-    return '$command | $printerName | $printResult | $id | $success | $rawRequest';
-  }
+  bool get success => printResult == PrintResult.success;
+  Map get details => {
+        'printer': [printerAlias, printerName],
+        'command': [commandType, friendlyType],
+      };
+  List<PrintResponseMessage> get messages =>
+      setResponseMessages(printErrors, details);
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:paxa_print/utils/uuid_assignment.dart';
 
 class PrinterAddScreen extends StatefulWidget {
   final dynamic onCreate;
@@ -13,17 +12,20 @@ class PrinterAddScreen extends StatefulWidget {
 class _PrinterAddScreenState extends State<PrinterAddScreen> {
   String? alias;
   String? name;
-  String? ip;
+  String? host;
   int? port = 9100;
   String driver = 'ReceiptDirectJet';
-  String uuid = UuidAssignment.v4();
+  int? cols = 42;
+  String? proxyPrinterName;
 
   Box printersBox = Hive.box('printers');
 
   final _formKey = GlobalKey<FormState>();
+  final _driverKey = GlobalKey<FormFieldState>();
+  bool enableCols = false;
+  bool enablePrintername = false;
   @override
   Widget build(BuildContext context) {
-    print(uuid);
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.search),
@@ -40,12 +42,14 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
               if (_formKey.currentState!.validate()) {
                 var printerInfo = {
                   'name': name,
-                  'alias': alias,
                   'port': port,
-                  'ip': ip,
-                  'driver': driver
+                  'host': host,
+                  'driver': driver,
+                  'marca': driver == 'Fiscalberry' ? 'Fiscalberry' : 'EscP',
+                  'cols': cols,
+                  'printerName': proxyPrinterName,
                 };
-                widget.onCreate(uuid, printerInfo);
+                widget.onCreate(alias, printerInfo);
 
                 Navigator.pop(context);
               }
@@ -97,7 +101,10 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
                     }
                     return null;
                   },
-                  onChanged: (value) => ip = value,
+                  onChanged: (value) {
+                    if (value == 'EscP') {}
+                    host = value;
+                  },
                 ),
                 TextFormField(
                   keyboardType: TextInputType.number,
@@ -114,6 +121,7 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
                   onChanged: (value) => port = int.tryParse(value),
                 ),
                 DropdownButtonFormField(
+                    key: _driverKey,
                     decoration: const InputDecoration(label: Text('Driver')),
                     items: const [
                       DropdownMenuItem<String>(
@@ -128,8 +136,52 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
                     onChanged: (value) {
                       if (value != null) {
                         driver = value;
+                        if (value == 'Fiscalberry') {
+                          enablePrintername = true;
+                          enableCols = false;
+                          setState(() {});
+                        } else {
+                          enablePrintername = false;
+                          enableCols = true;
+                          setState(() {});
+                        }
+                      } else {
+                        enablePrintername = false;
+                        enableCols = false;
                       }
                     }),
+                enableCols && !enablePrintername
+                    ? TextFormField(
+                        keyboardType: TextInputType.number,
+                        initialValue: '42',
+                        decoration:
+                            const InputDecoration(label: Text('Columnas')),
+                        validator: (value) {
+                          if (value == null) {
+                            return null;
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Solo puede ingresar números';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) => cols = int.tryParse(value),
+                      )
+                    : enablePrintername && !enableCols
+                        ? TextFormField(
+                            keyboardType: TextInputType.number,
+                            initialValue: '',
+                            decoration: const InputDecoration(
+                                label: Text('Proxy printerName')),
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Ingrese un valor';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => proxyPrinterName = value,
+                          )
+                        : const SizedBox.shrink(),
               ],
             ),
           )),

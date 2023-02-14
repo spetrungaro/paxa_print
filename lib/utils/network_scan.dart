@@ -16,8 +16,7 @@ class NetworkScanner {
 
     await stream.listen((NetworkAddress addr) {
       if (addr.exists) {
-        foundPrinters.add(Printer(ipAddress: addr.ip, port: port));
-        print('Printer found: ${addr.ip}:$port');
+        foundPrinters.add(Printer(host: addr.ip, port: port));
       }
     }).asFuture();
     return foundPrinters;
@@ -40,9 +39,3 @@ class NetworkScanner {
     return printer.exists;
   }
 }
-
-// void main(List<String> args) async {
-//   print(await NetworkScanner._scanPort(args[0], int.parse(args[1])));
-//   // print(await NetworkScanner.scanCommonPorts(args[0]));
-//   // print(await NetworkScanner.scanSpecificPrinter(args[0], 9100));
-// }

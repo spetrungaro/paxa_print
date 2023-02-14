@@ -1,12 +1,15 @@
-enum PrintResult {
-  success,
-  connectionError,
-  printerNotExist,
+enum PrintResult { success, withWarnings, withErrors }
+
+enum PrintError {
   badJsonFormat,
   noPrinterInJson,
-  badCommand,
+  printerNotExist,
   noCommand,
+  badCommand,
   noSuchAction,
+  noDriver,
+  connectionError,
   printerError,
-  other
+  didNotPrint,
+  unhandledError
 }

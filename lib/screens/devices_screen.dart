@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:paxa_print/api/request_handler.dart';
-import 'package:paxa_print/components/device_tile.dart';
+
+import '../api/request_handler.dart';
+import '../components/device_tile.dart';
 
 class DevicesScreen extends StatefulWidget {
   final RequestHandler handler;
@@ -15,21 +16,15 @@ class _DevicesScreenState extends State<DevicesScreen> {
   late RequestHandler handler;
   @override
   void initState() {
-    print('here');
     handler = widget.handler;
     clients = handler.devicesList;
-    handler.addListener(() => mounted
-        ? setState(() {
-            print('Listened');
-          })
-        : null);
+    handler.addListener(() => mounted ? setState(() {}) : null);
     super.initState();
   }
 
   @override
   void dispose() {
     handler.removeListener(() {});
-    print('Disposed');
     super.dispose();
   }
 

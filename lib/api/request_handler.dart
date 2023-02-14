@@ -5,22 +5,21 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:paxa_print/utils/uuid_assignment.dart';
 
 import '../controller/connector.dart';
 import '../models/print_response.dart';
+import '../utils/uuid_assignment.dart';
 
 class RequestHandler extends ChangeNotifier {
   late HttpServer _server;
+  late Connector connector;
 
   late String ip;
   late int port;
   late bool _running;
-  late void Function(PrintResponse) onPrintMessage;
   late void Function(bool) onServerStatusChanged;
   late void Function() onServerError;
 
-  final Connector _connector = Connector();
   final List<WebSocket> _sockets = [];
 
   bool get running => _running;
@@ -32,14 +31,13 @@ class RequestHandler extends ChangeNotifier {
     ip = 'localhost';
     port = 12000;
     _running = false;
-    onPrintMessage = (_) {};
     onServerError = () {};
     onServerStatusChanged = (_) {};
   }
 
-  Future<void> discover() async {
+  Future<void> _discover() async {
     var server = Hive.box('config').get('SERVIDOR');
-    var printers = Hive.box('printers').keys;
+    var printers = Hive.box('printers').values;
     if (server == null) {
       var newServer = {
         'uuid': UuidAssignment.v4(),
@@ -48,15 +46,14 @@ class RequestHandler extends ChangeNotifier {
         'discover_url': 'https://www.paxapos.com/discover.json',
       };
       await Hive.box('config').put('SERVIDOR', newServer);
-    } else {
-      print(server);
     }
     // throw Exception;
   }
 
   Future<void> startServer() async {
     try {
-      _server = await HttpServer.bind(ip, 12000);
+      await _discover();
+      _server = await HttpServer.bind(ip, port);
       _running = true;
       onServerStatusChanged(_running);
       print('Listening on ${_server.address.address}:${_server.port}');
@@ -88,17 +85,9 @@ class RequestHandler extends ChangeNotifier {
       }
       var clientInfo = {'address': clientAddress, 'type': deviceType};
       addClient(clientInfo, socket);
-      print(_devicesList);
       // Device Info
 
       handleSocketMessages(socket, clientInfo);
-    } else if ((request.uri.path == '/api')) {
-      print('Api alcanzada');
-      var body = await utf8.decodeStream(request);
-      _connector.runPrintJob(body, onPrintMessage);
-
-      request.response.write('{"data":"datum}');
-      request.response.close();
     } else {
       request.response.statusCode = HttpStatus.notFound;
       request.response.close();
@@ -108,8 +97,25 @@ class RequestHandler extends ChangeNotifier {
   void handleSocketMessages(WebSocket socket, Map<String, String> clientInfo) {
     socket.listen(
       (message) {
-        _connector.runPrintJob(message, onPrintMessage);
-        socket.add('You sent: $message');
+        var res = connector.runPrintJob(message);
+        res.then((value) {
+          if (value is String) {
+            socket.add(value);
+          } else if (value is PrintTask) {
+            Map<String, dynamic> res = {
+              "rta": {
+                "action": value.commandType,
+                "rta": value.printResult.name,
+              }
+            };
+            if (value.printErrors.isNotEmpty) {
+              var messages = value.messages.map((e) => e.title).toList();
+              res['errors'] = messages;
+            }
+            var rta = jsonEncode(res);
+            socket.add(rta);
+          }
+        });
       },
       onDone: () => removeClient(clientInfo, socket),
       onError: handleSocketError,
@@ -118,8 +124,8 @@ class RequestHandler extends ChangeNotifier {
   }
 
   void handleSocketError(err) {
-    print(err);
     onServerError();
+    closeServer();
   }
 
   void removeClient(Map<String, String> clientInfo, WebSocket socket) {
@@ -138,9 +144,7 @@ class RequestHandler extends ChangeNotifier {
 
   void closeAllConnections() {
     for (var socket in _sockets) {
-      socket.close().then(
-            (value) => print('Socket closed by server'),
-          );
+      socket.close();
     }
   }
 
@@ -152,7 +156,6 @@ class RequestHandler extends ChangeNotifier {
         onServerStatusChanged(_running);
       });
     } catch (e) {
-      print('Error en el Server');
       onServerError();
     }
   }

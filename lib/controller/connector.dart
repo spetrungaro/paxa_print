@@ -1,123 +1,117 @@
 import 'dart:convert';
 
-import '../models/command.dart';
-import '../models/print_response.dart';
-import '../models/results.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class TranslationException implements Exception {
-  PrintResponse response;
-  TranslationException(this.response);
-}
+import '../models/build_actual_config.dart';
+import '../models/print_response.dart';
+import '../models/printer.dart';
+import '../models/results.dart';
+import 'driver_handler.dart';
+import 'driver_interface.dart';
+import 'escpos/errors.dart';
 
 class Connector {
-  Map<String, dynamic> _jsonToPrintCommand(String json) {
-    //
-    Map<String, dynamic> printMessage = {};
+  late void Function(PrintTask) onPrintMessage;
+  DriverHandler driverHandler = DriverHandler();
+
+  Future<dynamic> runPrintJob(String json) async {
+    PrintTask printTask = PrintTask();
+    String driverName;
+    IPrinterDriver? driver;
+    Printer? printerMap;
+    ActualConfig actualConfig = ActualConfig();
+
     try {
-      printMessage = jsonDecode(json);
-      return printMessage;
+      var printers = Hive.box('printers');
+      // var printersObject
+      printTask.rawRequest = json;
+      printTask = _jsonToPrintCommand(printTask);
+      printTask = _getPrinterAlias(printTask);
+      printTask = _getCommandType(printTask);
+      if (printTask.commandType == 'getActualConfig') {
+        return jsonEncode(actualConfig.actualConfig);
+      } else if (printTask.commandType == 'getAvailablePrinters') {
+        return jsonEncode(actualConfig.getAvailablePrinters);
+      }
+
+      var printer = printers.get(printTask.printerAlias);
+      if (printer == null) {
+        printTask.printErrors.add(PrintError.printerNotExist);
+      } else {
+        printTask.printerName = printer['name'];
+        driverName = printer['driver'];
+        driver = driverHandler.getPrinterDriver(driverName);
+        printerMap = Printer.fromMap({printTask.printerAlias!: printer});
+      }
+      if (printTask.commandType != null) {
+        printTask = _getCommand(printTask);
+      }
+      if (driver == null) {
+        printTask.printErrors.add(PrintError.noDriver);
+      } else if (printTask.printErrors.isEmpty && printTask.command != null) {
+        printTask.printResult =
+            driver.printCommand(printerMap!, printTask.command!);
+      }
+    } catch (e) {
+      if (e is PrinterConnectionError) {
+        printTask.printErrors.add(PrintError.connectionError);
+      } else {
+        printTask.printErrors.add(PrintError.unhandledError);
+      }
+      printTask.printResult = PrintResult.withErrors;
+    }
+    onPrintMessage(printTask);
+    return printTask;
+  }
+
+  PrintTask _jsonToPrintCommand(PrintTask task) {
+    //
+    try {
+      task.command = jsonDecode(task.rawRequest!);
+      return task;
     } catch (_) {
-      throw TranslationException(
-        PrintResponse(
-          printResult: PrintResult.badJsonFormat,
-        ),
-      );
+      task.printErrors.add(PrintError.badJsonFormat);
+      return task;
     }
   }
 
-  String _getPrinterAlias(Map printMessage) {
-    final String? printerAlias = printMessage.remove('printerName');
+  PrintTask _getPrinterAlias(PrintTask task) {
+    String? printerAlias = task.command?.remove('printerName');
+    task.printerAlias = printerAlias;
 
     if (printerAlias == null) {
-      throw TranslationException(
-        PrintResponse(
-          command: PrintCommand(_getCommandType(printMessage, null)),
-          printResult: PrintResult.noPrinterInJson,
-        ),
-      );
+      task.printErrors.add(PrintError.noPrinterInJson);
     }
-
-    return printerAlias;
+    return task;
   }
 
-  String _getCommandType(Map printMessage, String? printerName) {
+  PrintTask _getCommandType(PrintTask task) {
     String? commandType;
     try {
-      commandType = printMessage.keys.first;
-      if (commandType == null) throw Exception;
+      commandType = task.command?.keys.first;
+      if (commandType == null) {
+        task.printErrors.add(PrintError.noCommand);
+      }
+      task.commandType = commandType;
     } catch (_) {
-      throw TranslationException(
-        PrintResponse(
-          printerName: printerName,
-          printResult: PrintResult.noCommand,
-        ),
-      );
+      task.commandType = commandType;
+      task.printErrors.add(PrintError.noCommand);
     }
 
-    return commandType;
+    return task;
   }
 
-  PrintCommand _getCommand(
-    Map printMessage,
-    String commandType,
-    String printerName,
-  ) {
-    Map<String, dynamic>? command;
+  PrintTask _getCommand(PrintTask task) {
     try {
-      var parseCommand = printMessage[commandType];
-      if (parseCommand is! Map<String, dynamic>) throw Exception();
-      command = parseCommand;
+      task.command = task.command?[task.commandType];
+      return task;
     } catch (e) {
-      throw TranslationException(
-        PrintResponse(
-          printerName: printerName,
-          command: PrintCommand(commandType, printerAlias: printerName),
-          printResult: PrintResult.badCommand,
-        ),
-      );
-    }
-
-    var printCommand =
-        PrintCommand(commandType, printerAlias: printerName, command: command);
-
-    return printCommand;
-  }
-
-  Future<void> runPrintJob(String json, Function(PrintResponse) action) async {
-    try {
-      var res = _jsonToPrintCommand(json);
-      var printerAlias = _getPrinterAlias(res);
-      var commandType = _getCommandType(res, printerAlias);
-      if (!commandType.contains('print')) {
-        throw TranslationException(
-          PrintResponse(
-              printerName: printerAlias,
-              printResult: PrintResult.noSuchAction,
-              command: PrintCommand(commandType, printerAlias: printerAlias)),
-        );
+      if (task.commandType == 'openDrawer') {
+        task.command = {'drawer': task.command};
+        return task;
       }
-      var printerName = printerAlias;
-      var command = _getCommand(res, commandType, printerName);
-      var response = PrintResponse(
-        rawRequest: json,
-        printResult: PrintResult.success,
-        command: command,
-        printerName: printerName,
-      );
-      print(response);
-      action(response);
-    } catch (e) {
-      if (e is TranslationException) {
-        var response = e.response..rawRequest = json;
-        print(response);
-        action(response);
-      } else if (e is TypeError) {
-        print('Otra: $e');
-      } else if (e is FormatException) {
-        print(e);
-      } else {
-        print('LPM');
-      }
+      task.printErrors.add(PrintError.badCommand);
+      return task;
     }
   }
 }

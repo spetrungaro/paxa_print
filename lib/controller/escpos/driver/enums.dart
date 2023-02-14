@@ -38,6 +38,7 @@ class PosPrintResult {
   static const scanInProgress = PosPrintResult._internal(6);
   static const noRouteToHost = PosPrintResult._internal(7);
   static const notImplemented = PosPrintResult._internal(8);
+  static const connectionRefused = PosPrintResult._internal(8);
 
   String get msg {
     if (value == PosPrintResult.success.value) {
@@ -54,6 +55,8 @@ class PosPrintResult {
       return 'Error. Printer scanning in progress';
     } else if (value == PosPrintResult.noRouteToHost.value) {
       return 'Error. No Route to host';
+    } else if (value == PosPrintResult.connectionRefused.value) {
+      return 'Error. Connection refused';
     } else {
       return 'Unknown error';
     }

@@ -1,24 +1,29 @@
-import '../utils/uuid_assignment.dart';
-
 class Printer {
-  final String ipAddress;
-  final int port;
-  final String id;
-  final String name;
-  final String alias;
-  final int cols;
+  late String host;
+  late int port;
+  late String name;
+  late String alias;
+  late int cols;
+  late String driver;
+  late String? proxyPrinterName;
 
   Printer(
-      {this.ipAddress = '192.168.0.33',
+      {this.host = '192.168.0.253',
       this.port = 9100,
-      this.name = 'no-name',
-      this.alias = 'no-alias',
-      this.cols = 42})
-      : id = UuidAssignment.v4();
+      this.name = 'unknown',
+      this.proxyPrinterName,
+      this.alias = 'unknown',
+      this.driver = 'ReceiptDirectJet',
+      this.cols = 42});
 
-  @override
-  String toString() {
-    return 'NOMBRE: $name | ALIAS: $alias | COLS: $cols |'
-        ' IP: $ipAddress | PORT: ${port.toString()} | UUID: $id';
+  Printer.fromMap(Map<String, dynamic> printerMap) {
+    alias = printerMap.keys.single.toString();
+    final printerConfig = printerMap[alias];
+    host = printerConfig['host'] ?? '192.168.0.253';
+    port = printerConfig['port'] ?? 9100;
+    name = printerConfig['name'] ?? 'unknown';
+    cols = printerConfig['cols'] ?? 42;
+    driver = printerConfig['driver'] ?? 'ReceiptDirectJet';
+    proxyPrinterName = printerConfig['proxyPrinterName'];
   }
 }

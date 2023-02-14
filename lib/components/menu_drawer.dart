@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:paxa_print/api/request_handler.dart';
-import 'package:paxa_print/screens/devices_screen.dart';
-import 'package:paxa_print/screens/printers_screen.dart';
 
+import '../api/request_handler.dart';
+import '../screens/devices_screen.dart';
+import '../screens/printers_screen.dart';
 import 'info_dialog.dart';
 
 class MenuDrawer extends StatelessWidget {
@@ -13,23 +13,24 @@ class MenuDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       elevation: 50,
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           DrawerHeader(
+            margin: EdgeInsets.zero,
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor,
             ),
             child: Column(
-              children: const [
-                Image(
+              children: [
+                const Image(
                   image: AssetImage('assets/icons/plogo.png'),
-                  height: 80,
+                  height: 90,
                 ),
-                Spacer(),
+                const Spacer(),
                 Text(
                   'Fiscalberry',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 24),
                 ),
               ],
             ),
@@ -41,11 +42,11 @@ class MenuDrawer extends StatelessWidget {
                 textScaleFactor: .9,
                 style: TextStyle(color: Colors.grey.shade400)),
             onTap: () {
-              Navigator.pop(context);
+              // Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: ((context) => PrintersScreen()),
+                  builder: ((context) => const PrintersScreen()),
                 ),
               );
             },
@@ -59,7 +60,7 @@ class MenuDrawer extends StatelessWidget {
               style: TextStyle(color: Colors.grey.shade400),
             ),
             onTap: () {
-              Navigator.pop(context);
+              // Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -102,21 +103,26 @@ class MenuDrawer extends StatelessWidget {
               infoDialog(context);
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Configuración'),
-            subtitle: Text('Configure sus impresoras',
-                textScaleFactor: .9,
-                style: TextStyle(color: Colors.grey.shade400)),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: ((context) => PrintersScreen()),
-                ),
-              );
-            },
+          Expanded(
+            child: Align(
+              alignment: FractionalOffset.bottomCenter,
+              child: ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Configuración'),
+                subtitle: Text('Configure sus impresoras',
+                    textScaleFactor: .9,
+                    style: TextStyle(color: Colors.grey.shade400)),
+                onTap: () {
+                  // Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: ((context) => const PrintersScreen()),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

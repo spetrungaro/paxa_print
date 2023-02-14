@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:paxa_print/components/notification_snack_bar.dart';
-import 'package:paxa_print/screens/printer_add_screen.dart';
 
+import '../components/notification_snack_bar.dart';
 import '../components/printer_tile.dart';
+import 'printer_add_screen.dart';
 
 // import '../models/printer.dart';
 
@@ -16,7 +16,7 @@ class PrintersScreen extends StatefulWidget {
 
 class _PrintersScreenState extends State<PrintersScreen> {
   final Box printersBox = Hive.box('printers');
-  late Iterable printerIds;
+  late Iterable printerAliases;
 
   @override
   void initState() {
@@ -25,9 +25,12 @@ class _PrintersScreenState extends State<PrintersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    printerIds = Hive.box('printers').keys;
+    printerAliases = Hive.box('printers').keys;
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.refresh))
+        ],
         title: const Text('Impresoras'),
       ),
       floatingActionButton: FloatingActionButton(
@@ -46,22 +49,23 @@ class _PrintersScreenState extends State<PrintersScreen> {
               context: context,
               color: Colors.grey.shade300,
               tiles: [
-            ...printerIds.map(
-              (id) => PrinterTile(printersBox.get(id), id, deletePrinter),
+            ...printerAliases.map(
+              (alias) =>
+                  PrinterTile(printersBox.get(alias), alias, deletePrinter),
             ),
           ]).toList()),
     );
   }
 
-  void createPrinter(String uuid, Map printerInfo) {
-    printersBox.put(uuid, printerInfo);
+  void createPrinter(String alias, Map printerInfo) {
+    printersBox.put(alias, printerInfo);
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
         notificationSnackBar('Impresora ${printerInfo['name']} añadida'));
   }
 
-  void deletePrinter(String key) async {
-    printersBox.delete(key).then((value) {
+  void deletePrinter(String alias) async {
+    printersBox.delete(alias).then((value) {
       setState(() {});
       ScaffoldMessenger.of(context)
           .showSnackBar(notificationSnackBar('Impresora Eliminada'));

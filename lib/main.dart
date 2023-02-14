@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'package:flutter/foundation.dart'
     show Key, TargetPlatform, UniqueKey, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart'
@@ -31,28 +30,20 @@ void main() async {
       home: const App(),
     ),
   ));
-  print('App launched');
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     const config = FlutterBackgroundAndroidConfig(
-        notificationTitle: 'Fiscalberry Background',
-        notificationText: "Texto explicando que hace",
+        notificationTitle: 'Servidor de Impresión',
+        notificationText: "",
         enableWifiLock: true,
         showBadge: true,
         shouldRequestBatteryOptimizationsOff: true,
         notificationImportance: AndroidNotificationImportance.Default);
 
     var hasPermissions = await FlutterBackground.hasPermissions;
-    print(hasPermissions.toString());
     hasPermissions = await FlutterBackground.initialize(androidConfig: config);
-    print(hasPermissions.toString());
     if (hasPermissions) {
-      final backgroundExecution =
-          await FlutterBackground.enableBackgroundExecution();
-      print(backgroundExecution.toString());
+      await FlutterBackground.enableBackgroundExecution();
     }
-  } else {
-    print('No need for permissions');
-    print(defaultTargetPlatform.name);
   }
 }
 
@@ -73,7 +64,6 @@ class _RestartWidgetState extends State<RestartWidget> {
   Key key = UniqueKey();
 
   void restartApp() {
-    print('Restarting');
     setState(() {
       key = UniqueKey();
     });

@@ -28,35 +28,32 @@ class _PrinterAddScreenState extends State<PrinterAddScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.search),
-        onPressed: () {},
-      ),
-      appBar: AppBar(actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-          child: ElevatedButton(
-            style: const ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll(Colors.green)),
-            child: const Text('Agregar'),
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                var printerInfo = {
-                  'name': name,
-                  'port': port,
-                  'host': host,
-                  'driver': driver,
-                  'marca': driver == 'Fiscalberry' ? 'Fiscalberry' : 'EscP',
-                  'cols': cols,
-                  'printerName': proxyPrinterName,
-                };
-                widget.onCreate(alias, printerInfo);
+        backgroundColor: Colors.green,
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            var printerInfo = {
+              'name': name,
+              'port': port,
+              'host': host,
+              'driver': driver,
+              'marca': driver == 'Fiscalberry' ? 'Fiscalberry' : 'EscP',
+              'cols': cols,
+              'printerName': proxyPrinterName,
+            };
+            widget.onCreate(alias, printerInfo);
 
-                Navigator.pop(context);
-              }
-            },
-          ),
-        )
-      ]),
+            Navigator.pop(context);
+          }
+        },
+        child: const Icon(
+          Icons.check_rounded,
+          size: 32,
+        ),
+      ),
+      appBar: AppBar(
+        title: const Text('Agregar impresora'),
+        centerTitle: true,
+      ),
       body: Form(
           key: _formKey,
           child: Padding(

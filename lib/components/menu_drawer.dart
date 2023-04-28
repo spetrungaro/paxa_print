@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/request_handler.dart';
+import '../main.dart';
 import '../screens/devices_screen.dart';
 import '../screens/printers_screen.dart';
 import 'info_dialog.dart';
@@ -80,15 +81,6 @@ class MenuDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
             },
-            // onTap: () {
-            //   if (_running) {
-            //     handler.closeServer().then((value) {
-            //       RestartWidget.restartApp(context);
-            //     });
-            //   } else {
-            //     RestartWidget.restartApp(context);
-            //   }
-            // },
           ),
           ListTile(
             leading: const Icon(Icons.announcement_rounded),
@@ -103,13 +95,39 @@ class MenuDrawer extends StatelessWidget {
               infoDialog(context);
             },
           ),
+          ListTile(
+            tileColor: const Color.fromARGB(255, 252, 237, 239),
+            leading: Icon(
+              Icons.refresh_rounded,
+              color: Colors.red.shade900,
+            ),
+            title: Text(
+              'Reiniciar Servidor',
+              style: TextStyle(color: Colors.red.shade900),
+            ),
+            subtitle: Text(
+              'En caso de haber cambiado los ajustes',
+              textScaleFactor: .9,
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+            onTap: () {
+              if (handler.running) {
+                handler.closeServer().then((value) {
+                  RestartWidget.restartApp(context);
+                });
+              } else {
+                RestartWidget.restartApp(context);
+              }
+            },
+          ),
           Expanded(
             child: Align(
               alignment: FractionalOffset.bottomCenter,
               child: ListTile(
                 leading: const Icon(Icons.settings),
+                isThreeLine: true,
                 title: const Text('Configuración'),
-                subtitle: Text('Configure sus impresoras',
+                subtitle: Text('Configure las opciones del servidor',
                     textScaleFactor: .9,
                     style: TextStyle(color: Colors.grey.shade400)),
                 onTap: () {

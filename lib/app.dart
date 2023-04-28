@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'api/request_handler.dart';
 import 'components/menu_drawer.dart';
 import 'components/notification_snack_bar.dart';
-import 'components/print_task_card.dart';
+import 'components/print_task_tile.dart';
 import 'controller/connector.dart';
 import 'models/print_response.dart';
 import 'utils/ip_finder.dart';
@@ -64,17 +64,20 @@ class _AppState extends State<App> {
           }
         },
         backgroundColor: _running ? Colors.red : Colors.green,
-        child: Icon(_running ? Icons.close_rounded : Icons.play_arrow_rounded,
+        child: Icon(_running ? Icons.stop_rounded : Icons.play_arrow_rounded,
             size: 32),
       ),
       drawer: MenuDrawer(handler),
       body: Center(
           child: printTasks.isNotEmpty
               ? ListView(
-                  children: <Widget>[
-                    ...printTasks.reversed
-                        .map((printTask) => PrintTaskCard(printTask)),
-                  ],
+                  children: ListTile.divideTiles(
+                      context: context,
+                      color: Colors.grey.shade300,
+                      tiles: [
+                        ...printTasks.reversed
+                            .map((printTask) => PrintTaskTile(printTask)),
+                      ]).toList(),
                 )
               : const Text(
                   'Aún no hay impresiones',
@@ -84,15 +87,19 @@ class _AppState extends State<App> {
   }
 
   Future<void> _addPrintResult(PrintTask newResponse) async {
-    setState(() {
-      printTasks.add(newResponse);
-    });
+    if (mounted) {
+      setState(() {
+        printTasks.add(newResponse);
+      });
+    }
   }
 
   void handleServerStatus(bool status) {
-    setState(() {
-      _running = status;
-    });
+    if (mounted) {
+      setState(() {
+        _running = status;
+      });
+    }
   }
 
   void handleServerError() {

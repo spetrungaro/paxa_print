@@ -24,7 +24,7 @@ class NetworkScanner {
 
   static Future<List<Printer>> scanCommonPorts(String ip,
       {int timeout = 5}) async {
-    List<int> ports = [6001, 6100, 9100];
+    List<int> ports = [6001, 6100, 9100, 12000];
     List<Printer> foundPrinters = [];
 
     for (int port in ports) {

@@ -1,25 +1,28 @@
+import '../../models/printer.dart';
 import 'commands.dart';
 import 'driver/network_printer.dart';
 
 class ReceiptDirectJetTranslator {
-  Map<String, Function(NetworkPrinter, Map<String, dynamic>)>
-      receiptDirectJetCommands() {
-    return {
-      "printTexto": printTexto,
-      "printPedido": printPedido,
-      "printComanda": printComanda,
-      "printRemito": printRemito,
-      "printRemitoCorto": printRemitoCorto,
-      "printFacturaElectronica": printFacturaElectronica,
-      "printArqueo": printArqueo,
-      "openDrawer": openDrawer,
-      "default": printTexto
+  ReceiptDirectJetCommands commands = ReceiptDirectJetCommands();
+  Map<String, Function(NetworkPrinter, Printer, Map<String, dynamic>)>
+      receiptDirectJetCommands = {};
+  ReceiptDirectJetTranslator() {
+    receiptDirectJetCommands = {
+      "printTexto": commands.printTexto,
+      "printPedido": commands.printPedido,
+      "printComanda": commands.printComanda,
+      "printRemito": commands.printRemito,
+      "printRemitoCorto": commands.printRemitoCorto,
+      "printFacturaElectronica": commands.printFacturaElectronica,
+      "printArqueo": commands.printArqueo,
+      "openDrawer": commands.openDrawer
     };
   }
 
-  Function(NetworkPrinter, Map<String, dynamic>) getCommand(
+  Function(NetworkPrinter, Printer, Map<String, dynamic>) getCommand(
       String commandType) {
-    return receiptDirectJetCommands()[commandType] ??
-        receiptDirectJetCommands()["default"]!;
+    var command = receiptDirectJetCommands[commandType];
+    if (command != null) return command;
+    throw Exception;
   }
 }

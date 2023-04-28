@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:paxa_print/screens/printers_search_screen.dart';
 
 import '../components/notification_snack_bar.dart';
 import '../components/printer_tile.dart';
@@ -29,7 +30,18 @@ class _PrintersScreenState extends State<PrintersScreen> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.refresh))
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: ((context) =>
+                        PrintersSearchScreen(updatePrinter))),
+              );
+            },
+            icon: const Icon(Icons.search),
+            padding: const EdgeInsets.only(right: 25),
+          )
         ],
         title: const Text('Impresoras'),
       ),
@@ -44,16 +56,22 @@ class _PrintersScreenState extends State<PrintersScreen> {
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add, size: 32),
       ),
-      body: ListView(
-          children: ListTile.divideTiles(
-              context: context,
-              color: Colors.grey.shade300,
-              tiles: [
-            ...printerAliases.map(
-              (alias) =>
-                  PrinterTile(printersBox.get(alias), alias, deletePrinter),
-            ),
-          ]).toList()),
+      body: printerAliases.isEmpty
+          ? const Center(
+              child: Text(
+              'No hay impresoras configuradas.',
+              style: TextStyle(fontWeight: FontWeight.w300, fontSize: 20),
+            ))
+          : ListView(
+              children: ListTile.divideTiles(
+                  context: context,
+                  color: Colors.grey.shade300,
+                  tiles: [
+                  ...printerAliases.map(
+                    (alias) => PrinterTile(printersBox.get(alias), alias,
+                        deletePrinter, updatePrinter),
+                  ),
+                ]).toList()),
     );
   }
 
@@ -64,11 +82,18 @@ class _PrintersScreenState extends State<PrintersScreen> {
         notificationSnackBar('Impresora ${printerInfo['name']} añadida'));
   }
 
+  void updatePrinter(String alias, Map printerInfo) {
+    printersBox.put(alias, printerInfo);
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+        notificationSnackBar('Impresora ${printerInfo['name']} añadida'));
+  }
+
   void deletePrinter(String alias) async {
     printersBox.delete(alias).then((value) {
       setState(() {});
       ScaffoldMessenger.of(context)
-          .showSnackBar(notificationSnackBar('Impresora Eliminada'));
+          .showSnackBar(notificationSnackBar('Impresora ($alias) Eliminada'));
     });
   }
 }

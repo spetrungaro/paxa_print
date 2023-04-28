@@ -1,12 +1,13 @@
+
 import 'package:flutter/material.dart';
 
 import '../models/print_response.dart';
 import '../models/results.dart';
 import '../screens/detail_screen.dart';
 
-class PrintTaskCard extends StatelessWidget {
+class PrintTaskTile extends StatelessWidget {
   final PrintTask printTask;
-  const PrintTaskCard(this.printTask, {Key? key}) : super(key: key);
+  const PrintTaskTile(this.printTask, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

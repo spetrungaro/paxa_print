@@ -24,6 +24,19 @@ class Printer {
     name = printerConfig['name'] ?? 'unknown';
     cols = printerConfig['cols'] ?? 42;
     driver = printerConfig['driver'] ?? 'ReceiptDirectJet';
-    proxyPrinterName = printerConfig['proxyPrinterName'];
+    proxyPrinterName = printerConfig['printerName'];
+  }
+
+  Map<String, dynamic> toMap() {
+    var printerInfo = {
+      'name': name,
+      'port': port,
+      'host': host,
+      'driver': driver,
+      'marca': driver == 'Fiscalberry' ? 'Fiscalberry' : 'EscP',
+      'cols': cols,
+      'printerName': proxyPrinterName,
+    };
+    return printerInfo;
   }
 }

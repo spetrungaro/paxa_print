@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:paxa_print/screens/printer_edit_screen.dart';
 
+import '../models/printer.dart';
 import '../utils/network_scan.dart';
 
 class PrinterTile extends StatefulWidget {
   final Map value;
-  final dynamic onDelete;
   final dynamic id;
-  const PrinterTile(this.value, this.id, this.onDelete, {super.key});
+  final dynamic onDelete;
+  final dynamic onUpdate;
+  const PrinterTile(this.value, this.id, this.onDelete, this.onUpdate,
+      {super.key});
 
   @override
   State<PrinterTile> createState() => _PrinterTileState();
@@ -23,7 +27,7 @@ class _PrinterTileState extends State<PrinterTile> {
           ? null
           : online
               ? null
-              : const Color.fromARGB(255, 250, 219, 222),
+              : const Color.fromARGB(255, 255, 241, 242),
       title: Padding(
         padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
         child: Row(
@@ -42,19 +46,38 @@ class _PrinterTileState extends State<PrinterTile> {
       ),
       subtitle: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-        child: Text(widget.value['host'] ?? 'Sin IP'),
+        child: Row(
+          children: [
+            Text(widget.value['host'] ?? 'Sin IP'),
+            Text(
+              ' :${widget.value['port'].toString()}',
+              textScaleFactor: 0.8,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
-      leading: Icon(widget.value['marca'] == 'EscP' ? Icons.print : Icons.cast),
+      leading: Icon(widget.value['marca'] == 'EscP' ? Icons.print : Icons.cast,
+          color: online ? Colors.green : Colors.red),
       trailing: !loading
           ? IconButton(
               onPressed: () => widget.onDelete(widget.id),
-              icon: Icon(
-                Icons.radio_button_checked,
-                color: online ? Colors.green : Colors.red,
+              icon: const Icon(
+                Icons.delete_forever,
+                color: Colors.red,
               ),
             )
           : const CircularProgressIndicator.adaptive(),
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: ((context) => PrinterEditScreen(
+                  Printer.fromMap({widget.id: widget.value}),
+                  widget.onUpdate,
+                  widget.onDelete))),
+        );
+      },
     );
   }
 

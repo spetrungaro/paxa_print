@@ -148,7 +148,7 @@ class ReceiptDirectJetCommands {
         _pad(importeTotal.toStringAsFixed(2), priceCols, ' ', 'r');
 
     printer.text('$dsTotal$symbol$importeTotalTxt', styles: LEFT_A_B_1_2, maxCharsPerLine: totalCols);
-    print('$dsTotal$symbol$importeTotalTxt');
+    // print('$dsTotal$symbol$importeTotalTxt');
 
     printer.cut(mode: PosCutMode.partial);
   }

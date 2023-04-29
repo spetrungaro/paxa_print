@@ -118,7 +118,7 @@ class ReceiptDirectJetCommands {
       importeSubTotal += total;
     }
     printer.text('\n', maxCharsPerLine: totalCols, styles: LEFT_A_A_1_1);
-    print('\n');
+    // print('\n');
 
     var importeTotal = importeSubTotal;
 
